@@ -73,8 +73,7 @@ class UsuarioController extends Response{
     private function getRequest(){
         if(is_numeric($this->idUsuario)){
             try {
-                $query = $this->db->prepare('select *
-                                from usuarios where id_usuario = :idUsuario');
+                $query = $this->db->prepare('SELECT * FROM usuarios WHERE id_usuario = :idUsuario');
                 $query->bindParam(':idUsuario', $this->idUsuario);
                 $query->execute();
                 $rowCount = $query->rowCount();
@@ -111,13 +110,12 @@ class UsuarioController extends Response{
             }
         }else{
             try{
-                $query = $this->db->prepare('select nro_doc_cliente, contrasena, nom_cliente, ape_cliente, correo_cliente, 	tel_cliente
-                                        from clientes');
+                $query = $this->db->prepare('SELECT * FROM usuarios');
                 $query->execute();
                 $rowCount = $query->rowCount();
                 $deptosArray = array();
                 while($row = $query->fetch(PDO::FETCH_ASSOC)){
-                    $usuario = new Usuarios($row['nro_doc_cliente'], $row['contrasena'], $row['nom_cliente'], $row['ape_cliente'], $row['correo_cliente'], $row['tel_cliente']);
+                    $usuario = new Usuarios($row['id_usuario'], $row['contrasena'], $row['nombre_usuario'], $row['usuario'], $row['rol_usuario'], $row['id_cliente']);
                     $usuarioArray[] = $usuario->returnUsuarioAsArray();
                 }
                 $returnData = array();
@@ -148,20 +146,7 @@ class UsuarioController extends Response{
     private function getDelete(){
         try{
             //Validar que el Usuario no tenga clientes relacionadas
-            $query = $this->db->prepare('select count(*) as conteo from clientes where nro_doc_cliente = :idUsuario');
-            $query->bindParam(':idUsuario', $this->idUsuario);
-            $query->execute();
-            while($row = $query->fetch(PDO::FETCH_ASSOC)){
-                $numRows = $row['conteo']; 
-            }
-            if($numRows == 0){
-                $this->setSuccess(false);
-                $this->setHttpStatusCode(500);
-                $this->addMessage('No es posible eliminar Usuario. Usuario asociadas');
-                $this->send();
-                exit();
-            }
-            $query = $this->db->prepare('delete from clientes where nro_doc_cliente = :idUsuario');
+            $query = $this->db->prepare('delete from usuarios where id_usuario = :idUsuario');
             $query->bindParam(':idUsuario', $this->idUsuario);
             $query->execute();
             $rowCount = $query->rowCount();
@@ -203,14 +188,7 @@ class UsuarioController extends Response{
                 $this->send();
                 exit();
             }
-
-            // if(isset($jsonData->getUser) && $jsonData->getUser == true){ // Si viene getUser y se valida usuario con contraseña
-            //     $this->contrasena = $jsonData->contrasena;
-            //     $this->idUsuario = $jsonData->idUsuario;
-            //     $this->getRequestParams();
-            //     exit;
-            // }
-
+            
             if(!isset($jsonData->idUsuario)){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(400);
@@ -225,45 +203,44 @@ class UsuarioController extends Response{
                 $this->send();
                 exit(); 
             }
-            if(!isset($jsonData->nomCliente)){
+            if(!isset($jsonData->nomUsuario)){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(400);
                 $this->addMessage('Nombre de Usuario es obligatorio');
                 $this->send();
                 exit(); 
             }
-            if(!isset($jsonData->apeCliente)){
+            if(!isset($jsonData->usuario)){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(400);
-                $this->addMessage('Apellido de Usuario es obligatorio');
+                $this->addMessage('Usuario de Usuario es obligatorio');
                 $this->send();
                 exit(); 
             }
-            if(!isset($jsonData->correoCliente)){
+            if(!isset($jsonData->rol)){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(400);
-                $this->addMessage('Correo de Usuario es obligatorio');
+                $this->addMessage('Rol de Usuario es obligatorio');
                 $this->send();
                 exit(); 
             }
-            if(!isset($jsonData->telCliente)){
+            if(!isset($jsonData->id_cliente)){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(400);
-                $this->addMessage('Telefono de Usuario es obligatorio');
+                $this->addMessage('Id Cliente de Usuario es obligatorio');
                 $this->send();
                 exit(); 
             }
 
-            $jsonData->contrasena = md5($jsonData->contrasena);
-            // $idUsuario = new Usuarios(null, $jsonData->idUsuario);
-            $query = $this->db->prepare('insert into clientes (nro_doc_cliente, contrasena, nom_cliente, ape_cliente, correo_cliente, tel_cliente) 
-                                        values (:idUsuario, :contrasena, :nomCliente, :apeCliente, :correoCliente, :telCliente)');
+            $jsonData->contrasena = password_hash($jsonData->contrasena, PASSWORD_DEFAULT);
+            $query = $this->db->prepare('insert into usuarios (id_cliente, contrasena, nombre_usuario, usuario, rol_usuario, id_cliente) 
+                                        values (:idUsuario, :contrasena, :nomCliente, :usuario, :rolUsuario, :idCliente)');
             $query->bindParam(':idUsuario',  $jsonData->idUsuario, PDO::PARAM_INT);
-            $query->bindParam(':contrasena',    $jsonData->contrasena, PDO::PARAM_STR);
-            $query->bindParam(':nomCliente',    $jsonData->nomCliente, PDO::PARAM_STR);
-            $query->bindParam(':apeCliente',    $jsonData->apeCliente, PDO::PARAM_STR);
-            $query->bindParam(':correoCliente', $jsonData->correoCliente, PDO::PARAM_STR);
-            $query->bindParam(':telCliente',    $jsonData->telCliente, PDO::PARAM_INT);
+            $query->bindParam(':contrasena', $jsonData->contrasena, PDO::PARAM_STR);
+            $query->bindParam(':nomCliente', $jsonData->nomUsuario, PDO::PARAM_STR);
+            $query->bindParam(':usuario',    $jsonData->usuario, PDO::PARAM_STR);
+            $query->bindParam(':rolUsuario', $jsonData->rol, PDO::PARAM_STR);
+            $query->bindParam(':idCliente',   $jsonData->id_cliente, PDO::PARAM_INT);
 
             $query->execute();
             $rowCount = $query->rowCount();
