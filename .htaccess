@@ -1,0 +1,30 @@
+php_flag display_errors On
+
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+
+RewriteRule ^departamentos/([0-9]+)$ controller/departamento.php?idDepto=$1 [L]
+RewriteRule ^departamentos$ controller/departamento.php [L]
+
+RewriteRule ^ciudades$ controller/ciudad.php [L]
+RewriteRule ^ciudades/([0-9]+)$ controller/ciudad.php?idCiudad=$1 [L]
+RewriteRule ^ciudades/d=([0-9]+)$ controller/ciudad.php?idDeptoC=$1 [L]
+
+RewriteRule ^sucursal$ controller/sucursal.php [L]
+RewriteRule ^sucursal/([0-9]+)$ controller/sucursal.php?idSucursal=$1 [L]
+RewriteRule ^sucursal/c=([0-9]+)$ controller/sucursal.php?idCiudad=$1 [L]
+
+RewriteRule ^servicio$ controller/servicio.php [L]
+RewriteRule ^servicio/([0-9]+)$ controller/servicio.php?idServicio=$1 [L]
+RewriteRule ^servicio/s=([0-9]+)$ controller/servicio.php?idSucursal=$1 [L]
+
+RewriteRule ^horario$ controller/horarios.php [L]
+RewriteRule ^horario/([0-9]+)$ controller/horarios.php?idHorarios=$1 [L]
+
+RewriteRule ^usuario$ controller/usuario.php [L]
+RewriteRule ^usuario/([0-9]+)$ controller/usuario.php?idUsuario=$1 [L]
+RewriteRule ^usuario/login/ controller/usuario.php [L]
+
+RewriteRule ^turnos$ controller/turno.php [L]
+RewriteRule ^turnos/([0-9]+)$ controller/turno.php?idTurno=$1 [L]
