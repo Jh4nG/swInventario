@@ -233,11 +233,11 @@ class UsuarioController extends Response{
             }
 
             $jsonData->contrasena = password_hash($jsonData->contrasena, PASSWORD_DEFAULT);
-            $query = $this->db->prepare('insert into usuarios (id_cliente, contrasena, nombre_usuario, usuario, rol_usuario, id_cliente) 
-                                        values (:idUsuario, :contrasena, :nomCliente, :usuario, :rolUsuario, :idCliente)');
+            $query = $this->db->prepare('INSERT INTO usuarios (id_usuario, contrasena, nombre_usuario, usuario, rol_usuario, id_cliente) 
+                                        values (:idUsuario, :contrasena, :nomUsuario, :usuario, :rolUsuario, :idCliente)');
             $query->bindParam(':idUsuario',  $jsonData->idUsuario, PDO::PARAM_INT);
             $query->bindParam(':contrasena', $jsonData->contrasena, PDO::PARAM_STR);
-            $query->bindParam(':nomCliente', $jsonData->nomUsuario, PDO::PARAM_STR);
+            $query->bindParam(':nomUsuario', $jsonData->nomUsuario, PDO::PARAM_STR);
             $query->bindParam(':usuario',    $jsonData->usuario, PDO::PARAM_STR);
             $query->bindParam(':rolUsuario', $jsonData->rol, PDO::PARAM_STR);
             $query->bindParam(':idCliente',   $jsonData->id_cliente, PDO::PARAM_INT);
