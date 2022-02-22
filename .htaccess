@@ -7,9 +7,8 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^departamentos/([0-9]+)$ controller/departamento.php?idDepto=$1 [L]
 RewriteRule ^departamentos$ controller/departamento.php [L]
 
-RewriteRule ^ciudades$ controller/ciudad.php [L]
-RewriteRule ^ciudades/([0-9]+)$ controller/ciudad.php?idCiudad=$1 [L]
-RewriteRule ^ciudades/d=([0-9]+)$ controller/ciudad.php?idDeptoC=$1 [L]
+RewriteRule ^clientes$ controller/cliente.php [L]
+RewriteRule ^clientes/([0-9]+)$ controller/cliente.php?idCliente=$1 [L]
 
 RewriteRule ^sucursal$ controller/sucursal.php [L]
 RewriteRule ^sucursal/([0-9]+)$ controller/sucursal.php?idSucursal=$1 [L]
