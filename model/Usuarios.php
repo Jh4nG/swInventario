@@ -87,7 +87,7 @@ class Usuarios {
     public function returnUsuarioAsArray(){
         $usuario = array();
         $usuario['idUsuario'] = $this->getIdUsuario();
-        $usuario['usuario'] = $this->getNomUsuario();
+        $usuario['nombre'] = $this->getNomUsuario();
         $usuario['contrasena'] = $this->getContrasena();
         $usuario['usuario'] = $this->getUsuario();
         $usuario['rol'] = $this->getRolUsuario();
