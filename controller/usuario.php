@@ -57,6 +57,9 @@ class UsuarioController extends Response{
                 }
                 $this->getPost();
                 break;
+            case 'PUT':
+                $this->getUpdate();
+                break;
             default : // No existe método
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(500); 
@@ -342,6 +345,113 @@ class UsuarioController extends Response{
             $this->addMessage("Error conectando a Base de Datos");
             $this->send();
             exit;
+        }
+    }
+
+    private function getUpdate(){
+        try{
+            if($_SERVER['CONTENT_TYPE'] !== 'application/json'){ // Recibir JSON
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Content Type no corresponde a formato JSON');
+                $this->send();
+                exit();
+            } 
+            $rawPOSTData = file_get_contents('php://input');
+            if(!$jsonData = json_decode($rawPOSTData)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Request Body no corresponde a formato JSON');
+                $this->send();
+                exit();
+            }
+            
+            if(!isset($jsonData->idUsuario)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Id de Usuario es obligatorio');
+                $this->send();
+                exit(); 
+            }
+            if(!isset($jsonData->contrasena)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Contraseña de Usuario es obligatorio');
+                $this->send();
+                exit(); 
+            }
+            if(!isset($jsonData->nomUsuario)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Nombre de Usuario es obligatorio');
+                $this->send();
+                exit(); 
+            }
+            if(!isset($jsonData->usuario)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Usuario de Usuario es obligatorio');
+                $this->send();
+                exit(); 
+            }
+            if(!isset($jsonData->rol)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Rol de Usuario es obligatorio');
+                $this->send();
+                exit(); 
+            }
+            if(!isset($jsonData->id_cliente)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Id Cliente de Usuario es obligatorio');
+                $this->send();
+                exit(); 
+            }
+
+            $jsonData->contrasena = password_hash($jsonData->contrasena, PASSWORD_DEFAULT);
+            $query = $this->db->prepare('UPDATE usuarios SET contrasena = :contrasena,
+                                                             nombre_usuario = :nomUsuario, 
+                                                             usuario = :usuario, 
+                                                             rol_usuario = :rolUsuario,  
+                                                             id_cliente = :idCliente
+                                                    WHERE id_usuario =  :idUsuario');
+            $query->bindParam(':idUsuario',  $jsonData->idUsuario, PDO::PARAM_INT);
+            $query->bindParam(':contrasena', $jsonData->contrasena, PDO::PARAM_STR);
+            $query->bindParam(':nomUsuario', $jsonData->nomUsuario, PDO::PARAM_STR);
+            $query->bindParam(':usuario',    $jsonData->usuario, PDO::PARAM_STR);
+            $query->bindParam(':rolUsuario', $jsonData->rol, PDO::PARAM_STR);
+            $query->bindParam(':idCliente',   $jsonData->id_cliente, PDO::PARAM_INT);
+
+            $query->execute();
+            $rowCount = $query->rowCount();
+            
+            if($rowCount===0){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Falló actualización de Usuario');
+                $this->send();
+                exit();
+            }
+            $lastIdUsu = $this->db->lastInsertId();
+            $this->setSuccess(true);
+            $this->setHttpStatusCode(201);
+            $this->addMessage('Usuario creado');
+            $this->setData($jsonData->idUsuario);
+            $this->send();
+            exit();
+        }catch(UsuariosException $ex){
+            $this->setSuccess(false);
+            $this->setHttpStatusCode(400);
+            $this->addMessage($ex->getMessage());
+            $this->send();
+            exit();
+        }catch(PDOException $ex){
+            $this->setSuccess(false);
+            $this->setHttpStatusCode(500);
+            $this->addMessage('Falló conexión a BD');
+            $this->send();
+            exit();
         }
     }
 
