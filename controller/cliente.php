@@ -44,6 +44,9 @@ class ClienteController extends Response{
             case 'POST':
                 $this->getPost();
                 break;
+            case 'PUT':
+                $this->getUpdate();
+                break;
             default :
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(500); 
@@ -242,6 +245,92 @@ class ClienteController extends Response{
         }
     }
 
+    private function getUpdate()
+    {
+        try{
+            if($_SERVER['CONTENT_TYPE'] !== 'application/json'){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Content Type no corresponde a formato JSON');
+                $this->send();
+                exit();
+            } 
+            $rawPOSTData = file_get_contents('php://input');
+            if(!$jsonData = json_decode($rawPOSTData)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Request Body no corresponde a formato JSON');
+                $this->send();
+                exit();
+            }
+            if(!isset($jsonData->idCliente)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Nombre de Cliente es obligatorio');
+                $this->send();
+                exit(); 
+            }
+            if(!isset($jsonData->nomCliente)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Nombre de Cliente es obligatorio');
+                $this->send();
+                exit(); 
+            }
+            if(!isset($jsonData->nitCliente)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Nit Cliente es obligatorio');
+                $this->send();
+                exit(); 
+            }
+            if(!isset($jsonData->contactoCliente)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Contacto es obligatorio');
+                $this->send();
+                exit(); 
+            }
+            
+            $query = $this->db->prepare('UPDATE cliente SET nombre_cliente = :nomCliente,
+                                                            nit_cliente = :nitCliente,
+                                                            contacto_cliente = :contactoCliente
+                                                    WHERE   id = :idCliente');
+            $query->bindParam(':nomCliente', $jsonData->nomCliente, PDO::PARAM_STR);
+            $query->bindParam(':nitCliente', $jsonData->nitCliente, PDO::PARAM_INT);
+            $query->bindParam(':contactoCliente', $jsonData->contactoCliente, PDO::PARAM_STR);
+            $query->bindParam(':idCliente', $jsonData->idCliente, PDO::PARAM_INT);
+            $query->execute();
+            $rowCount = $query->rowCount();
+            
+            if($rowCount===0){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Falló creación de Cliente');
+                $this->send();
+                exit();
+            }
+            $lastIdCliente = $this->db->lastInsertId();
+            $this->setSuccess(true);
+            $this->setHttpStatusCode(201);
+            $this->addMessage('Cliente Actualizado');
+            $this->setData($lastIdCliente);
+            $this->send();
+            exit();
+        }catch(ClientesException $ex){
+            $this->setSuccess(false);
+            $this->setHttpStatusCode(400);
+            $this->addMessage($ex->getMessage());
+            $this->send();
+            exit();
+        }catch(PDOException $ex){
+            $this->setSuccess(false);
+            $this->setHttpStatusCode(500);
+            $this->addMessage('Falló conexión a BD');
+            $this->send();
+            exit();
+        }
+    }
 }
 
 $Cliente = new ClienteController();

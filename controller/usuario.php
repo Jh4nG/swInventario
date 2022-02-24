@@ -436,7 +436,7 @@ class UsuarioController extends Response{
             $lastIdUsu = $this->db->lastInsertId();
             $this->setSuccess(true);
             $this->setHttpStatusCode(201);
-            $this->addMessage('Usuario creado');
+            $this->addMessage('Usuario Actualizado');
             $this->setData($jsonData->idUsuario);
             $this->send();
             exit();
