@@ -306,7 +306,7 @@ class ClienteController extends Response{
             if($rowCount===0){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(400);
-                $this->addMessage('Falló creación de Cliente');
+                $this->addMessage('Falló actualización de Cliente');
                 $this->send();
                 exit();
             }
