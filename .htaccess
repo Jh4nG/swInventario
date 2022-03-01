@@ -12,4 +12,8 @@ RewriteRule ^clientes/([0-9]+)$ controller/cliente.php?idCliente=$1 [L]
 
 RewriteRule ^categoria$ controller/categoria.php [L]
 RewriteRule ^categoria/([0-9]+)$ controller/categoria.php?idCategoria=$1 [L]
-RewriteRule ^categoria/c=([0-9]+)$ controller/categoria.php?idCiudad=$1 [L]
+RewriteRule ^categoria/c=([0-9]+)$ controller/categoria.php?idCliente=$1 [L]
+
+RewriteRule ^producto$ controller/producto.php [L]
+RewriteRule ^producto/([0-9]+)$ controller/producto.php?idProducto=$1 [L]
+RewriteRule ^producto/c=([0-9]+)$ controller/producto.php?idCliente=$1 [L]

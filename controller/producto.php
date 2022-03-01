@@ -1,15 +1,15 @@
 <?php
 include '../head.php';
-require_once('../model/Categorias.php');
+require_once('../model/Productos.php');
 
-class CategoriaController extends Response{
+class ProductoController extends Response{
     private $db;
-    private $idCategoria = false;
+    private $idProducto = false;
     private $idCliente = false;
 
-    public function __construct($idCategoria = false, $idCliente = false){
+    public function __construct($idProducto = false, $idCliente = false){
         try{
-            $this->idCategoria = $idCategoria;
+            $this->idProducto = $idProducto;
             $this->idCliente = $idCliente;
             $this->db = DB::conectarDB();
         }catch(PDOException $ex){
@@ -23,12 +23,12 @@ class CategoriaController extends Response{
     }
 
     private function init(){
-        if(array_key_exists("idCategoria", $_GET)){
-            $this->idCategoria = $_GET['idCategoria'];
-            if($this->idCategoria == '' || !is_numeric($this->idCategoria)){
+        if(array_key_exists("idProducto", $_GET)){
+            $this->idProducto = $_GET['idProducto'];
+            if($this->idProducto == '' || !is_numeric($this->idProducto)){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(400); 
-                $this->addMessage("Id de Categoria no válido");
+                $this->addMessage("Id de Producto no válido");
                 $this->send();
                 exit;
             }
@@ -69,33 +69,35 @@ class CategoriaController extends Response{
     }
 
     private function getRequest(){
-        if(is_numeric($this->idCategoria)){
+        if(is_numeric($this->idProducto)){
             try {
-                $query = $this->db->prepare('SELECT *,(SELECT nombre_cliente FROM cliente WHERE id = categoria.id_cliente) as nom_cliente 
-                                            FROM categoria WHERE id_categoria = :idCategoria');
-                $query->bindParam(':idCategoria', $this->idCategoria);
+                $query = $this->db->prepare('SELECT *,
+                                            (SELECT nombre_categoria FROM categoria WHERE id_categoria = producto.id_categoria) as nom_categoria,
+                                            (SELECT nombre_cliente FROM cliente WHERE id = producto.id_cliente) as nom_cliente
+                                            FROM producto WHERE id_producto = :idProducto');
+                $query->bindParam(':idProducto', $this->idProducto);
                 $query->execute();
                 $rowCount = $query->rowCount();
                 if($rowCount === 0){
                     $this->setSuccess(false);
                     $this->setHttpStatusCode(404);
-                    $this->addMessage("Categoria no encontrado");
+                    $this->addMessage("Producto no encontrado");
                     $this->send();
                     exit;
                 }
                 while($row = $query->fetch(PDO::FETCH_ASSOC)){
-                    $cateogria = new Categoria($row['id_categoria'], $row['nombre_categoria'], $row['id_cliente'], $row['nom_cliente']);
-                    $cateogriaArray[] = $cateogria->returnCategoriaAsArray();
+                    $producto = new Producto($row['id_producto'], $row['nombre_producto'], $row['descripcion'], $row['precio'], $row['id_categoria'], $row['nom_categoria'], $row['id_cliente'], $row['nom_cliente']);
+                    $productoArray[] = $producto->returnProductoAsArray();
                 }
                 $returnData = array();
                 $returnData['nro_filas'] = $rowCount;
-                $returnData['categorias'] = $cateogriaArray;
+                $returnData['productos'] = $productoArray;
                 $this->setSuccess(true);
                 $this->setHttpStatusCode(200);
                 $this->setData($returnData);
                 $this->send();
                 exit;
-            } catch (CategoriaException $ex) {
+            } catch (ProductoException $ex) {
                 $this->setSuccess(false); $this->setHttpStatusCode(500);
                 $this->addMessage($ex->getMessage());
                 $this->send();
@@ -109,28 +111,30 @@ class CategoriaController extends Response{
             }
         }else{
             try{
-                $sql = 'SELECT *,(SELECT nombre_cliente FROM cliente WHERE id = categoria.id_cliente) as nom_cliente FROM categoria';
+                $sql = 'SELECT *,
+                            (SELECT nombre_categoria FROM categoria WHERE id_categoria = producto.id_categoria) as nom_categoria,
+                            (SELECT nombre_cliente FROM cliente WHERE id = producto.id_cliente) as nom_cliente FROM producto';
                 if($this->idCliente != false){
                     $sql .= " WHERE id_cliente = ".$this->idCliente;
                 }
                 $query = $this->db->prepare($sql);
                 $query->execute();
                 $rowCount = $query->rowCount();
-                $categoriasArray = array();
+                $productosArray = array();
                 while($row = $query->fetch(PDO::FETCH_ASSOC)){
-                    $cateogria = new Categoria($row['id_categoria'], $row['nombre_categoria'], $row['id_cliente'], $row['nom_cliente']);
-                    $categoriasArray[] = $cateogria->returnCategoriaAsArray();
+                    $producto = new Producto($row['id_producto'], $row['nombre_producto'], $row['descripcion'], $row['precio'], $row['id_categoria'], $row['nom_categoria'], $row['id_cliente'], $row['nom_cliente']);
+                    $productosArray[] = $producto->returnProductoAsArray();
                 }
                 $returnData = array();
                 $returnData['filas_retornadas'] = $rowCount;
-                $returnData['categorias'] = $categoriasArray;
+                $returnData['productos'] = $productosArray;
                 $this->setSuccess(true);
                 $this->setHttpStatusCode(200);
                 $this->toCache(true);
                 $this->setData($returnData);
                 $this->send();
                 exit;
-            }catch(CategoriaException $ex){
+            }catch(ProductoException $ex){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(400);
                 $this->addMessage($ex->getMessage());
@@ -148,9 +152,9 @@ class CategoriaController extends Response{
 
     private function getDelete(){
         try{
-            //Validar que el Categoria no tenga ciudades relacionadas
-            $query = $this->db->prepare('SELECT count(*) as conteo FROM categoria WHERE id_categoria = :idCategoria');
-            $query->bindParam(':idCategoria', $this->idCategoria);
+            //Validar que el Producto no tenga ciudades relacionadas
+            $query = $this->db->prepare('SELECT count(*) as conteo FROM producto WHERE id_producto = :idProducto');
+            $query->bindParam(':idProducto', $this->idProducto);
             $query->execute();
             while($row = $query->fetch(PDO::FETCH_ASSOC)){
                 $numRows = $row['conteo']; 
@@ -158,30 +162,30 @@ class CategoriaController extends Response{
             if($numRows == 0){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(500);
-                $this->addMessage('No es posible eliminar Categoria.');
+                $this->addMessage('No es posible eliminar producto.');
                 $this->send();
                 exit();
             }
-            $query = $this->db->prepare('DELETE FROM categoria where id_categoria = :idCategoria');
-            $query->bindParam(':idCategoria', $this->idCategoria);
+            $query = $this->db->prepare('DELETE FROM producto where id_producto = :idProducto');
+            $query->bindParam(':idProducto', $this->idProducto);
             $query->execute();
             $rowCount = $query->rowCount();
             if($rowCount===0){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(404);
-                $this->addMessage('Categoria no encontrado'); 
+                $this->addMessage('Producto no encontrado'); 
                 $this->send();
                 exit();
             }
             $this->setSuccess(true);
             $this->setHttpStatusCode(200);
-            $this->addMessage('Categoria eliminado');
+            $this->addMessage('Producto eliminado');
             $this->send();
             exit();
         }catch(PDOException $ex){
             $this->setSuccess(false);
             $this->setHttpStatusCode(500);
-            $this->addMessage('Error eliminando Categoria');
+            $this->addMessage('Error eliminando Producto');
             $this->send();
             exit();
         }
@@ -204,10 +208,31 @@ class CategoriaController extends Response{
                 $this->send();
                 exit();
             }
-            if(!isset($jsonData->nomCategoria)){
+            if(!isset($jsonData->nomProducto)){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(400);
-                $this->addMessage('Nombre de Categoria es obligatorio');
+                $this->addMessage('Nombre de Producto es obligatorio');
+                $this->send();
+                exit(); 
+            }
+            if(!isset($jsonData->descProducto)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Descipción de Producto es obligatorio');
+                $this->send();
+                exit(); 
+            }
+            if(!isset($jsonData->precioProducto)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Precio es obligatorio');
+                $this->send();
+                exit(); 
+            }
+            if(!isset($jsonData->idCategoria)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('id Categoria es obligatorio');
                 $this->send();
                 exit(); 
             }
@@ -218,9 +243,12 @@ class CategoriaController extends Response{
                 $this->send();
                 exit(); 
             }
-            // $newCategoria = new Categoria(null, $jsonData->nomCategoria);
-            $query = $this->db->prepare('INSERT INTO categoria (nombre_categoria,id_cliente) values (:nomCategoria,:idCliente)');
-            $query->bindParam(':nomCategoria', $jsonData->nomCategoria, PDO::PARAM_STR);
+            // $newProducto = new Producto(null, $jsonData->nomProducto);
+            $query = $this->db->prepare('INSERT INTO producto (nombre_producto,descripcion,precio,id_categoria,id_cliente) values (:nomProducto,:descProducto,:precioProducto,:idCategoria,:idCliente)');
+            $query->bindParam(':nomProducto', $jsonData->nomProducto, PDO::PARAM_STR);
+            $query->bindParam(':descProducto', $jsonData->descProducto, PDO::PARAM_STR);
+            $query->bindParam(':precioProducto', $jsonData->precioProducto, PDO::PARAM_STR);
+            $query->bindParam(':idCategoria', $jsonData->idCategoria, PDO::PARAM_INT);
             $query->bindParam(':idCliente', $jsonData->idCliente, PDO::PARAM_INT);
             $query->execute();
             $rowCount = $query->rowCount();
@@ -228,18 +256,18 @@ class CategoriaController extends Response{
             if($rowCount===0){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(400);
-                $this->addMessage('Falló creación de Categoria');
+                $this->addMessage('Falló creación de Producto');
                 $this->send();
                 exit();
             }
-            $lastidCategoria = $this->db->lastInsertId();
+            $lastidProducto = $this->db->lastInsertId();
             $this->setSuccess(true);
             $this->setHttpStatusCode(201);
-            $this->addMessage('Categoria creado');
-            $this->setData($lastidCategoria);
+            $this->addMessage('Producto creado');
+            $this->setData($lastidProducto);
             $this->send();
             exit();
-        }catch(CategoriaException $ex){
+        }catch(ProductoException $ex){
             $this->setSuccess(false);
             $this->setHttpStatusCode(400);
             $this->addMessage($ex->getMessage());
@@ -272,51 +300,78 @@ class CategoriaController extends Response{
                 $this->send();
                 exit();
             }
-            if(!isset($jsonData->idCategoria)){
+            if(!isset($jsonData->idProducto)){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(400);
-                $this->addMessage('Nombre de Categoria es obligatorio');
+                $this->addMessage('Id de Producto es obligatorio');
                 $this->send();
                 exit(); 
             }
-            if(!isset($jsonData->nomCategoria)){
+            if(!isset($jsonData->nomProducto)){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(400);
-                $this->addMessage('Nombre de Categoria es obligatorio');
+                $this->addMessage('Nombre de Producto es obligatorio');
+                $this->send();
+                exit(); 
+            }
+            if(!isset($jsonData->descProducto)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Descipción de Producto es obligatorio');
+                $this->send();
+                exit(); 
+            }
+            if(!isset($jsonData->precioProducto)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('Precio es obligatorio');
+                $this->send();
+                exit(); 
+            }
+            if(!isset($jsonData->idCategoria)){
+                $this->setSuccess(false);
+                $this->setHttpStatusCode(400);
+                $this->addMessage('id Categoria es obligatorio');
                 $this->send();
                 exit(); 
             }
             if(!isset($jsonData->idCliente)){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(400);
-                $this->addMessage('Id Cliente es obligatorio');
+                $this->addMessage('id Cliente es obligatorio');
                 $this->send();
                 exit(); 
             }
-            $query = $this->db->prepare('UPDATE categoria SET nombre_categoria = :nomCategoria
-                                            WHERE id_categoria = :idCategoria 
-                                            AND id_cliente = :idCliente');
-            $query->bindParam(':nomCategoria', $jsonData->nomCategoria, PDO::PARAM_STR);
-            $query->bindParam(':idCategoria',  $jsonData->idCategoria, PDO::PARAM_INT);
-            $query->bindParam(':idCliente',    $jsonData->idCliente, PDO::PARAM_INT);
+            $query = $this->db->prepare('UPDATE producto SET nombre_producto = :nomProducto,
+                                            descripcion = :descProducto,
+                                            precio = :precioProducto
+                                            WHERE id_producto = :idProducto 
+                                            AND id_cliente = :idCliente
+                                            AND id_categoria = :idCategoria');
+            $query->bindParam(':idProducto', $jsonData->idProducto, PDO::PARAM_INT);
+            $query->bindParam(':nomProducto', $jsonData->nomProducto, PDO::PARAM_STR);
+            $query->bindParam(':descProducto', $jsonData->descProducto, PDO::PARAM_STR);
+            $query->bindParam(':precioProducto', $jsonData->precioProducto, PDO::PARAM_STR);
+            $query->bindParam(':idCategoria', $jsonData->idCategoria, PDO::PARAM_INT);
+            $query->bindParam(':idCliente', $jsonData->idCliente, PDO::PARAM_INT);
             $query->execute();
             $rowCount = $query->rowCount();
 
             if($rowCount===0){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(400);
-                $this->addMessage('Falló actualización de Categoria');
+                $this->addMessage('Falló actualización de Producto');
                 $this->send();
                 exit();
             }
             $lastIdCliente = $this->db->lastInsertId();
             $this->setSuccess(true);
             $this->setHttpStatusCode(201);
-            $this->addMessage('Categoria Actualizada');
+            $this->addMessage('Producto Actualizado');
             $this->setData($lastIdCliente);
             $this->send();
             exit();
-        }catch(CategoriaException $ex){
+        }catch(ProductoException $ex){
             $this->setSuccess(false);
             $this->setHttpStatusCode(400);
             $this->addMessage($ex->getMessage());
@@ -333,4 +388,4 @@ class CategoriaController extends Response{
 
 }
 
-$categoriaController = new CategoriaController();
+$productoController = new ProductoController();
