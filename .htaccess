@@ -4,6 +4,10 @@ RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 
+RewriteRule ^usuario/([0-9]+)$ controller/usuario.php?idUsuario=$1 [L]
+RewriteRule ^usuario$ controller/usuario.php [L]
+RewriteRule ^usuario/login/$ controller/usuario.php [L]
+
 RewriteRule ^departamentos/([0-9]+)$ controller/departamento.php?idDepto=$1 [L]
 RewriteRule ^departamentos$ controller/departamento.php [L]
 
