@@ -275,7 +275,7 @@ class CategoriaController extends Response{
             if(!isset($jsonData->idCategoria)){
                 $this->setSuccess(false);
                 $this->setHttpStatusCode(400);
-                $this->addMessage('Nombre de Categoria es obligatorio');
+                $this->addMessage('ID de Categoria es obligatorio');
                 $this->send();
                 exit(); 
             }
