@@ -25,3 +25,7 @@ RewriteRule ^producto/c=([0-9]+)$ controller/producto.php?idCliente=$1 [L]
 RewriteRule ^proveedor$ controller/proveedor.php [L]
 RewriteRule ^proveedor/([0-9]+)$ controller/proveedor.php?idProveedor=$1 [L]
 RewriteRule ^proveedor/c=([0-9]+)$ controller/proveedor.php?idCliente=$1 [L]
+
+RewriteRule ^prodprov$ controller/prodprov.php [L]
+RewriteRule ^prodprov/([0-9]+)$ controller/prodprov.php?idProdProv=$1 [L]
+RewriteRule ^prodprov/c=([0-9]+)$ controller/prodprov.php?idCliente=$1 [L]
